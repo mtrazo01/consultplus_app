@@ -22,7 +22,7 @@ import {
 } from '@expo-google-fonts/montserrat';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
-const { width, height } = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
 export default function LoginScreen() {
   const navigation = useNavigation();
@@ -57,12 +57,9 @@ export default function LoginScreen() {
       });
 
       const usuarioLogado = response.data.usuario;
-      console.log('Usuário logado:', usuarioLogado);
-
       Alert.alert('Login realizado com sucesso!');
       navigation.navigate('Home', { usuario: usuarioLogado });
     } catch (error) {
-      console.error('Erro no login:', error);
       Alert.alert('Erro no login', 'CPF ou senha incorretos.');
     }
   };
@@ -78,8 +75,13 @@ export default function LoginScreen() {
   }
 
   return (
-    <LinearGradient colors={['#0e1d34', '#132e4f']} style={styles.bg}>
-      <StatusBar barStyle="light-content" backgroundColor="#0e1d34" />
+    <LinearGradient
+      colors={['#0f2027', '#203a43', '#2c5364']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={styles.bg}
+    >
+      <StatusBar barStyle="light-content" backgroundColor="#0f2027" />
       <KeyboardAwareScrollView
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
@@ -89,7 +91,7 @@ export default function LoginScreen() {
       >
         <Animated.View style={[styles.card, { opacity: fadeAnim }]}>
           <Text style={styles.title}>
-            <Text style={{ color: '#ffffff' }}>Consult</Text>
+            <Text style={{ color: '#fff' }}>Consult</Text>
             <Text style={{ color: '#41d6ff' }}>Plus</Text>
           </Text>
           <Text style={styles.subtitle}>Saúde na Palma da Mão</Text>
@@ -102,7 +104,7 @@ export default function LoginScreen() {
               placeholder="CPF"
               keyboardType="numeric"
               style={styles.input}
-              placeholderTextColor="#a3b1c6"
+              placeholderTextColor="#b0c4de"
             />
           </View>
 
@@ -113,12 +115,17 @@ export default function LoginScreen() {
               value={senha}
               onChangeText={setSenha}
               style={styles.input}
-              placeholderTextColor="#a3b1c6"
+              placeholderTextColor="#b0c4de"
             />
           </View>
 
-          <TouchableOpacity style={styles.button} onPress={login} activeOpacity={0.9}>
-            <Text style={styles.buttonText}>Entrar</Text>
+          <TouchableOpacity style={styles.buttonWrapper} onPress={login} activeOpacity={0.9}>
+            <LinearGradient
+              colors={['#2b8ed6', '#2060ae']}
+              style={styles.button}
+            >
+              <Text style={styles.buttonText}>Entrar</Text>
+            </LinearGradient>
           </TouchableOpacity>
 
           <TouchableOpacity onPress={() => navigation.navigate('Cadastro')} activeOpacity={0.7}>
@@ -134,7 +141,6 @@ const styles = StyleSheet.create({
   bg: {
     flex: 1,
     justifyContent: 'center',
-    backgroundColor: '#0e1d34',
   },
   scroll: {
     flexGrow: 1,
@@ -146,41 +152,41 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#0e1d34',
+    backgroundColor: '#0f2027',
   },
   card: {
     width: width * 0.92,
     maxWidth: 390,
     backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    borderRadius: 24,
+    borderRadius: 26,
     paddingVertical: 40,
     paddingHorizontal: 28,
     alignItems: 'stretch',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
+    shadowOpacity: 0.25,
+    shadowRadius: 18,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.12)',
+    borderColor: 'rgba(255, 255, 255, 0.15)',
   },
   title: {
     fontFamily: 'Montserrat_700Bold',
-    fontSize: 32,
+    fontSize: 34,
     textAlign: 'center',
-    marginBottom: 6,
+    marginBottom: 8,
     letterSpacing: 2,
   },
   subtitle: {
     fontFamily: 'Montserrat_400Regular',
     color: '#c2d7f4',
-    fontSize: 15,
+    fontSize: 16,
     textAlign: 'center',
-    marginBottom: 30,
+    marginBottom: 32,
   },
   inputBox: {
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    borderRadius: 12,
-    marginBottom: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 14,
+    marginBottom: 18,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.18)',
   },
@@ -188,33 +194,28 @@ const styles = StyleSheet.create({
     fontFamily: 'Montserrat_400Regular',
     padding: 14,
     fontSize: 16,
-    color: '#ffffff',
+    color: '#fff',
+  },
+  buttonWrapper: {
+    borderRadius: 14,
+    overflow: 'hidden',
+    marginBottom: 18,
   },
   button: {
-    backgroundColor: '#2b8ed6',
-    borderRadius: 12,
     paddingVertical: 16,
-    marginTop: 10,
-    marginBottom: 16,
     alignItems: 'center',
-    shadowColor: '#41d6ff',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 5,
   },
   buttonText: {
     fontFamily: 'Montserrat_600SemiBold',
-    color: '#ffffff',
+    color: '#fff',
     fontSize: 18,
     letterSpacing: 1.2,
   },
   link: {
     fontFamily: 'Montserrat_600SemiBold',
-    color: '#ffffff',
+    color: '#41d6ff',
     textAlign: 'center',
     fontSize: 15,
-    textDecorationLine: 'underline',
     marginTop: 4,
   },
 });

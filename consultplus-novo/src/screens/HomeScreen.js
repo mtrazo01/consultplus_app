@@ -8,6 +8,8 @@ import {
   Dimensions,
   StatusBar
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import {
   useFonts,
   Montserrat_700Bold,
@@ -53,137 +55,138 @@ export default function HomeScreen({ route, navigation }) {
   }
 
   return (
-    <View style={styles.bg}>
-      <StatusBar backgroundColor="#2060ae" barStyle="light-content" />
-      <View style={styles.circleLeft} />
-      <View style={styles.circleRight} />
+    <LinearGradient
+      colors={['#0f2027', '#203a43', '#2c5364']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={styles.bg}
+    >
+      <StatusBar backgroundColor="#0f2027" barStyle="light-content" />
 
       <Animated.View style={[styles.card, { opacity: fadeAnim }]}>
-        <Text style={styles.title}>Bem-vindo(a)</Text>
+        <Text style={styles.title}>Bem Vindo</Text>
         <Text style={styles.name}>
           {usuario?.nome?.trim() || 'Usuário'}
         </Text>
 
+        {/* Botão Agendar Consulta */}
         <TouchableOpacity
-          style={styles.button}
+          style={styles.buttonWrapper}
           onPress={() => navigation.navigate('AgendarConsulta', { usuario })}
-          activeOpacity={0.85}
+          activeOpacity={0.9}
         >
-          <Text style={styles.buttonText}>Agendar Consulta</Text>
+          <LinearGradient colors={['#2b8ed6', '#2060ae']} style={styles.button}>
+            <Ionicons name="calendar-outline" size={22} color="#fff" style={styles.icon} />
+            <Text style={styles.buttonText}>Agendar Consulta</Text>
+          </LinearGradient>
         </TouchableOpacity>
 
+        {/* Botão Histórico */}
         <TouchableOpacity
-          style={styles.button}
+          style={styles.buttonWrapper}
           onPress={() => navigation.navigate('HistoricoConsultas', { usuario })}
-          activeOpacity={0.85}
+          activeOpacity={0.9}
         >
-          <Text style={styles.buttonText}>Histórico de Consultas</Text>
+          <LinearGradient colors={['#41d6ff', '#2b8ed6']} style={styles.button}>
+            <Ionicons name="time-outline" size={22} color="#fff" style={styles.icon} />
+            <Text style={styles.buttonText}>Histórico de Consultas</Text>
+          </LinearGradient>
         </TouchableOpacity>
 
+        {/* Botão Sair */}
         <TouchableOpacity
-          style={[styles.button, styles.logoutButton]}
+          style={styles.logoutButton}
           onPress={sair}
-          activeOpacity={0.8}
+          activeOpacity={0.85}
         >
+          <Ionicons name="log-out-outline" size={22} color="#fff" style={styles.icon} />
           <Text style={styles.logoutText}>Sair</Text>
         </TouchableOpacity>
       </Animated.View>
-    </View>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   bg: {
     flex: 1,
-    backgroundColor: '#2060ae',
     justifyContent: 'center',
-    alignItems: 'center'
-  },
-  circleLeft: {
-    position: 'absolute',
-    top: -64,
-    left: -62,
-    width: 170,
-    height: 170,
-    backgroundColor: '#67aaff',
-    borderRadius: 85,
-    opacity: 0.13
-  },
-  circleRight: {
-    position: 'absolute',
-    bottom: -48,
-    right: -55,
-    width: 128,
-    height: 128,
-    backgroundColor: '#41d6ff',
-    borderRadius: 64,
-    opacity: 0.12
+    alignItems: 'center',
   },
   loaderBox: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#2060ae'
+    backgroundColor: '#0f2027',
   },
   card: {
-    width: width * 0.91,
-    maxWidth: 395,
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    paddingVertical: 35,
-    paddingHorizontal: 24,
+    width: width * 0.9,
+    maxWidth: 400,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderRadius: 26,
+    paddingVertical: 40,
+    paddingHorizontal: 28,
     alignItems: 'center',
-    elevation: 13,
-    shadowColor: '#203065',
-    shadowOffset: { width: 0, height: 7 },
-    shadowOpacity: 0.14,
-    shadowRadius: 15
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 18,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
   },
   title: {
     fontFamily: 'Montserrat_700Bold',
-    fontSize: 23,
-    color: '#2060ae',
+    fontSize: 26,
+    color: '#fff',
     textAlign: 'center',
-    marginBottom: 1,
-    letterSpacing: 1.3
+    marginBottom: 4,
+    letterSpacing: 1.6,
   },
   name: {
     fontFamily: 'Montserrat_600SemiBold',
     fontSize: 20,
-    color: '#20324a',
+    color: '#dce3f0',
     textAlign: 'center',
-    marginBottom: 28
+    marginBottom: 32,
+  },
+  buttonWrapper: {
+    width: '100%',
+    marginVertical: 8,
+    borderRadius: 14,
+    overflow: 'hidden',
   },
   button: {
-    backgroundColor: '#2b8ed6',
-    borderRadius: 9,
-    paddingVertical: 15,
-    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 11,
-    marginBottom: 3,
-    shadowColor: '#41d6ff',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.10,
-    shadowRadius: 7,
-    elevation: 1
+    paddingVertical: 16,
+    borderRadius: 14,
   },
   buttonText: {
     fontFamily: 'Montserrat_600SemiBold',
     color: '#fff',
     fontSize: 17,
-    letterSpacing: 1
+    marginLeft: 8,
+    letterSpacing: 0.8,
+  },
+  icon: {
+    marginRight: 6,
   },
   logoutButton: {
-    backgroundColor: '#fff',
-    borderWidth: 1.5,
-    borderColor: '#f3f2f7ff',
-    marginTop: 16
+    marginTop: 22,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 14,
+    paddingVertical: 14,
+    width: '100%',
   },
   logoutText: {
     fontFamily: 'Montserrat_600SemiBold',
-    color: '#d62b2bff',
-    fontSize: 18,
-    letterSpacing: 0.4
-  }
+    color: '#fff',
+    fontSize: 17,
+    marginLeft: 8,
+    letterSpacing: 0.6,
+  },
 });

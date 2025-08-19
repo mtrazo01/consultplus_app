@@ -44,7 +44,6 @@ export default function AgendarConsultaScreen({ route, navigation }) {
         console.error('Erro ao carregar especialidades:', error);
       }
     };
-
     carregarEspecialidades();
   }, []);
 
@@ -59,7 +58,6 @@ export default function AgendarConsultaScreen({ route, navigation }) {
         Alert.alert('Erro', 'Não foi possível carregar os médicos.');
       }
     };
-
     carregarMedicos();
   }, [especialidadeSelecionada]);
 
@@ -109,16 +107,20 @@ export default function AgendarConsultaScreen({ route, navigation }) {
 
   return (
     <View style={styles.container}>
-      <StatusBar backgroundColor="#2060ae" barStyle="light-content" />
+      <StatusBar backgroundColor="#1a1a2e" barStyle="light-content" />
 
-      <Text style={[styles.title, { fontFamily: 'Montserrat_700Bold' }]}>Agendar Consulta</Text>
+      <Text style={[styles.title, { fontFamily: 'Montserrat_700Bold' }]}>
+        Agendar Consulta
+      </Text>
 
-      <Text style={[styles.label, { fontFamily: 'Montserrat_600SemiBold' }]}>Especialidade</Text>
+      <Text style={[styles.label, { fontFamily: 'Montserrat_600SemiBold' }]}>
+        Especialidade
+      </Text>
       <View style={styles.pickerContainer}>
         <Picker
           selectedValue={especialidadeSelecionada}
           onValueChange={(itemValue) => setEspecialidadeSelecionada(itemValue)}
-          style={{ fontFamily: 'Montserrat_400Regular', color: '#234266' }}
+          style={styles.picker}
         >
           <Picker.Item label="Selecione..." value="" />
           {especialidades.map((esp) => (
@@ -127,13 +129,15 @@ export default function AgendarConsultaScreen({ route, navigation }) {
         </Picker>
       </View>
 
-      <Text style={[styles.label, { fontFamily: 'Montserrat_600SemiBold' }]}>Médico</Text>
+      <Text style={[styles.label, { fontFamily: 'Montserrat_600SemiBold' }]}>
+        Médico
+      </Text>
       <View style={styles.pickerContainer}>
         <Picker
           selectedValue={medicoSelecionado}
           onValueChange={(itemValue) => setMedicoSelecionado(itemValue)}
           enabled={medicos.length > 0}
-          style={{ fontFamily: 'Montserrat_400Regular', color: '#234266' }}
+          style={styles.picker}
         >
           <Picker.Item label="Selecione..." value="" />
           {medicos.map((med) => (
@@ -143,13 +147,13 @@ export default function AgendarConsultaScreen({ route, navigation }) {
       </View>
 
       <TouchableOpacity onPress={() => setMostrarDataPicker(true)} style={styles.selectButton}>
-        <Text style={[styles.selectText, { fontFamily: 'Montserrat_600SemiBold' }]}>
+        <Text style={styles.selectText}>
           Selecionar Data: {formatarData(data)}
         </Text>
       </TouchableOpacity>
 
       <TouchableOpacity onPress={() => setMostrarHoraPicker(true)} style={styles.selectButton}>
-        <Text style={[styles.selectText, { fontFamily: 'Montserrat_600SemiBold' }]}>
+        <Text style={styles.selectText}>
           Selecionar Hora: {formatarHora(data)}
         </Text>
       </TouchableOpacity>
@@ -191,7 +195,7 @@ export default function AgendarConsultaScreen({ route, navigation }) {
       )}
 
       <TouchableOpacity style={styles.button} onPress={agendar}>
-        <Text style={[styles.buttonText, { fontFamily: 'Montserrat_700Bold' }]}>Confirmar Agendamento</Text>
+        <Text style={styles.buttonText}>Confirmar Agendamento</Text>
       </TouchableOpacity>
     </View>
   );
@@ -200,7 +204,7 @@ export default function AgendarConsultaScreen({ route, navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#2060ae',
+    backgroundColor: '#0f2027',
     padding: 20,
   },
   loadingContainer: {
@@ -213,49 +217,54 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 26,
-    color: '#f2f7fb',
+    color: '#ffffff',
     textAlign: 'center',
-    marginBottom: 20,
+    marginBottom: 25,
   },
   label: {
     marginTop: 10,
-    color: '#f2f7fb',
+    color: '#ffffff',
     fontSize: 16,
     marginBottom: 5,
   },
   pickerContainer: {
-    backgroundColor: '#f1f6f3ff',
+    backgroundColor: '#ffffff',
     borderRadius: 12,
     marginBottom: 15,
     borderWidth: 1,
-    borderColor: '#2b8ed6',
+    borderColor: '#0f3460',
+  },
+  picker: {
+    color: '#0f3460',
+    fontFamily: 'Montserrat_400Regular',
   },
   selectButton: {
-    backgroundColor: '#2b8ed6',
-    padding: 12,
-    borderRadius: 10,
+    backgroundColor: '#0f3460',
+    padding: 14,
+    borderRadius: 12,
     marginVertical: 10,
+    alignItems: 'center',
   },
   selectText: {
-    color: '#f2f7fb',
-    textAlign: 'center',
+    color: '#ffffff',
+    fontFamily: 'Montserrat_600SemiBold',
     fontSize: 16,
   },
   button: {
-    backgroundColor: '#f7f4f4ff',
+    backgroundColor: '#e94560', // Vermelho suave igual botão sair
     padding: 15,
-    borderRadius: 10,
-    marginTop: 20,
+    borderRadius: 12,
+    marginTop: 25,
     alignItems: 'center',
-    shadowColor: '#cd1616ff',
-    shadowOffset: { width: 0, height: 3 },
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 6,
-    elevation: 3,
+    elevation: 4,
   },
   buttonText: {
-    fontFamily: 'Montserrat_600SemiBold',
-    color: '#da2626ff',
-    fontSize: 18
-  }
+    fontFamily: 'Montserrat_700Bold',
+    color: '#ffffff',
+    fontSize: 18,
+  },
 });
