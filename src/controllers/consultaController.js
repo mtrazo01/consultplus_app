@@ -15,7 +15,7 @@ exports.agendarConsulta = async (req, res) => {
   }
 };
 
-// Listar todas as consultas
+// Listar todas as consulta
 exports.listarConsultas = async (req, res) => {
   try {
     const result = await db.query("SELECT * FROM consultas ORDER BY data_hora");

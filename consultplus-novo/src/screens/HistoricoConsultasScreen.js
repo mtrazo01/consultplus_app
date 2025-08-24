@@ -1,36 +1,40 @@
-import React, { useEffect, useState, useRef } from "react";
+import { Ionicons } from "@expo/vector-icons";
+import { useNavigation, useRoute } from "@react-navigation/native";
+import { LinearGradient } from "expo-linear-gradient";
+import { useEffect, useRef, useState } from "react";
 import {
-  View,
+  ActivityIndicator,
+  Alert,
+  Animated,
+  Dimensions,
+  FlatList,
+  StatusBar,
+  StyleSheet,
   Text,
   TouchableOpacity,
-  StyleSheet,
-  Animated,
-  StatusBar,
-  Alert,
-  Dimensions,
+  View,
 } from "react-native";
-import { useNavigation, useRoute } from "@react-navigation/native";
-import { KeyboardAwareFlatList } from "react-native-keyboard-aware-scroll-view";
-import api from "../services/api"; // ajuste para seu arquivo de configuração axios/fetch
+import api from "../services/api";
+
 import {
-  useFonts,
   Montserrat_400Regular,
   Montserrat_600SemiBold,
   Montserrat_700Bold,
-} from "@expo-google-fonts/montserrat";
+  useFonts,
+} from '@expo-google-fonts/montserrat';
 
 const { width, height } = Dimensions.get("window");
 
-export default function HistoricoConsultas() {
-  const navigation = useNavigation();
+export default function HistoricoScreen() {
   const route = useRoute();
-
+  const navigation = useNavigation();
   const { usuario } = route.params || {};
   const usuarioId =
     usuario?.id || usuario?.userId || usuario?.usuario_id || undefined;
 
   const [consultas, setConsultas] = useState([]);
   const [loading, setLoading] = useState(true);
+
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   let [fontsLoaded] = useFonts({
@@ -40,205 +44,238 @@ export default function HistoricoConsultas() {
   });
 
   useEffect(() => {
-    if (!usuarioId) {
-      Alert.alert("Erro", "ID do usuário não encontrado.");
-      setLoading(false);
-      return;
-    }
+    if (!usuarioId) return;
 
-    const carregarHistorico = async () => {
+    const fetchConsultas = async () => {
       try {
         const response = await api.get(`/consultas/usuario/${usuarioId}`);
         setConsultas(response.data);
       } catch (err) {
-        console.error("Erro ao carregar histórico:", err);
-        Alert.alert(
-          "Erro ao carregar histórico",
-          err?.response?.data?.erro || err.message || "Erro desconhecido"
-        );
+        console.error("Erro ao buscar histórico:", err);
+        Alert.alert("Erro", "Não foi possível carregar o histórico.");
       } finally {
         setLoading(false);
       }
     };
 
-    carregarHistorico();
+    fetchConsultas();
 
     Animated.timing(fadeAnim, {
       toValue: 1,
-      duration: 900,
+      duration: 800,
       useNativeDriver: true,
     }).start();
   }, [usuarioId]);
 
+  const renderItem = ({ item }) => (
+    <Animated.View style={[styles.cardConsulta, { opacity: fadeAnim }]}>
+      <Text style={styles.medico}>👨‍⚕️ {item.medico}</Text>
+      <Text style={styles.especialidade}>💊 {item.especialidade}</Text>
+
+      <View style={styles.infoRow}>
+        <Text style={styles.dateText}>
+          📅 {new Date(item.data_hora).toLocaleDateString()}
+        </Text>
+        <Text style={styles.timeText}>
+          ⏰{" "}
+          {new Date(item.data_hora).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          })}
+        </Text>
+      </View>
+
+      {/* Botão de excluir */}
+      <TouchableOpacity
+        style={styles.deleteButton}
+        onPress={() =>
+          Alert.alert(
+            "Excluir Consulta",
+            "Deseja realmente excluir esta consulta?",
+            [
+              { text: "Cancelar", style: "cancel" },
+              {
+                text: "Excluir",
+                style: "destructive",
+                onPress: async () => {
+                  try {
+                    await api.delete(`/consultas/${item.id}`);
+                    setConsultas((prev) =>
+                      prev.filter((c) => c.id !== item.id)
+                    );
+                    Alert.alert("Sucesso", "Consulta excluída!");
+                  } catch (err) {
+                    Alert.alert(
+                      "Erro",
+                      "Não foi possível excluir a consulta."
+                    );
+                  }
+                },
+              },
+            ]
+          )
+        }
+      >
+        <Text style={styles.deleteButtonText}>🗑️ Excluir</Text>
+      </TouchableOpacity>
+    </Animated.View>
+  );
+
   if (!fontsLoaded) {
     return (
-      <View style={styles.loaderBox}>
-        <Text
-          style={{ fontFamily: "Montserrat_400Regular", color: "#2060ae", fontSize: 18 }}
-        >
-          Carregando...
-        </Text>
+      <View style={styles.bg}>
+        <Text style={{ fontFamily: 'Montserrat_400Regular', color: '#2060ae', fontSize: 18 }}>Carregando...</Text>
       </View>
     );
   }
 
-  const renderItem = ({ item }) => (
-    <View style={styles.itemBox}>
-      <Text style={styles.itemDataHora}>
-        {new Date(item.data_hora).toLocaleString("pt-BR")}
-      </Text>
-      <Text style={styles.itemMedico}>Médico: {item.medico}</Text>
-      <Text style={styles.itemEspecialidade}>Especialidade: {item.especialidade}</Text>
-    </View>
-  );
-
-  const ListHeader = () => (
-    <View style={{ marginBottom: 18 }}>
-      <Text style={styles.title}>Histórico de Consultas</Text>
-      {loading && <Text style={styles.loadingText}>Carregando histórico...</Text>}
-      {!loading && consultas.length === 0 && (
-        <Text style={styles.noDataText}>Nenhuma consulta encontrada.</Text>
-      )}
-    </View>
-  );
-
-  const ListFooter = () => (
-    <TouchableOpacity
-      style={styles.buttonBack}
-      onPress={() => navigation.goBack()}
-      activeOpacity={0.7}
-    >
-      <Text style={styles.buttonBackText}>Voltar</Text>
-    </TouchableOpacity>
-  );
-
   return (
-    <View style={styles.bg}>
-      <StatusBar backgroundColor="#2060ae" barStyle="light-content" />
-      <View style={styles.circleLeft} />
-      <View style={styles.circleRight} />
-
+    <LinearGradient
+      colors={["#0f2027", "#203a43", "#2c5364"]}
+      style={styles.bg}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+    >
+      <StatusBar backgroundColor="#0f2027" barStyle="light-content" />
       <Animated.View style={[styles.card, { opacity: fadeAnim }]}>
-        <KeyboardAwareFlatList
-          data={consultas}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={renderItem}
-          showsVerticalScrollIndicator={false}
-          scrollEnabled={!loading && consultas.length > 0}
-          ListHeaderComponent={ListHeader}
-          ListFooterComponent={ListFooter}
-          contentContainerStyle={{
-            paddingBottom: 20,
-          }}
-          keyboardShouldPersistTaps="handled"
-        />
+        <Text style={styles.title}>
+          <Text style={{ color: "#2060ae" }}>Histórico</Text>{" "}
+          <Text style={{ color: "#2680c2" }}>de Consultas</Text>
+        </Text>
+
+        {loading ? (
+          <ActivityIndicator size="large" color="#2060ae" />
+        ) : consultas.length === 0 ? (
+          <Text style={styles.emptyText}>Nenhuma consulta encontrada.</Text>
+        ) : (
+          <FlatList
+            data={consultas}
+            keyExtractor={(item) => String(item.id)}
+            renderItem={renderItem}
+            contentContainerStyle={{ paddingBottom: 8 }}
+            style={styles.list}
+          />
+        )}
+
+        {/* Botão Voltar */}
+        <TouchableOpacity
+          style={styles.backBtn}
+          activeOpacity={0.8}
+          onPress={() => navigation.navigate('Home', { usuario })}
+        >
+          <Ionicons name="arrow-back" size={20} color="#2060ae" style={{ marginRight: 5 }} />
+          <Text style={styles.backBtnText}>Voltar para Home</Text>
+        </TouchableOpacity>
       </Animated.View>
-    </View>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   bg: {
     flex: 1,
-    backgroundColor: "#2060ae",
     justifyContent: "center",
     alignItems: "center",
-  },
-  circleLeft: {
-    position: "absolute",
-    top: -60,
-    left: -60,
-    width: 170,
-    height: 170,
-    backgroundColor: "#67aaff",
-    borderRadius: 85,
-    opacity: 0.15,
-    zIndex: 0,
-  },
-  circleRight: {
-    position: "absolute",
-    bottom: -40,
-    right: -55,
-    width: 120,
-    height: 120,
-    backgroundColor: "#41d6ff",
-    borderRadius: 60,
-    opacity: 0.15,
-    zIndex: 0,
-  },
-  loaderBox: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#2060ae",
+    backgroundColor: "#0f2027",
   },
   card: {
-    width: width * 0.91,
-    maxWidth: 390,
-    maxHeight: height * 0.85,
-    backgroundColor: "white",
-    borderRadius: 22,
-    paddingVertical: 24,
-    paddingHorizontal: 25,
-    elevation: 14,
-    shadowColor: "#222b3a",
-    shadowOffset: { width: 0, height: 7 },
-    shadowOpacity: 0.15,
-    shadowRadius: 15,
-    zIndex: 1,
+    width: width * 0.94,
+    maxWidth: 410,
+    backgroundColor: "#fff",
+    borderRadius: 24,
+    paddingVertical: 30,
+    paddingHorizontal: 19,
+    elevation: 10,
+    shadowColor: "#000",
+    shadowOpacity: 0.17,
+    shadowOffset: { width: 0, height: 8 },
+    shadowRadius: 8,
+    alignItems: 'stretch',
+    marginVertical: 30,
   },
   title: {
-    fontFamily: "Montserrat_700Bold",
-    fontSize: 27,
+    fontFamily: 'Montserrat_700Bold',
+    fontSize: 26,
+    textAlign: "center",
+    marginBottom: 18,
+  },
+  list: {
+    maxHeight: height * 0.5,
+    marginBottom: 8,
+  },
+  cardConsulta: {
+    backgroundColor: "#e7f1fd",
+    borderRadius: 17,
+    padding: 15,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: "#d9e3fa",
+    shadowColor: "#000",
+    shadowOpacity: 0.09,
+    shadowRadius: 5,
+    elevation: 2,
+  },
+  medico: {
+    fontFamily: 'Montserrat_700Bold',
+    fontSize: 18,
     color: "#2060ae",
-    textAlign: "center",
-    letterSpacing: 1.7,
+    marginBottom: 2,
   },
-  loadingText: {
-    fontFamily: "Montserrat_400Regular",
-    fontSize: 16,
-    color: "#7ba8cc",
-    marginTop: 10,
-    textAlign: "center",
-  },
-  noDataText: {
-    fontFamily: "Montserrat_400Regular",
-    fontSize: 16,
-    color: "#7ba8cc",
-    marginVertical: 20,
-    textAlign: "center",
-  },
-  itemBox: {
-    borderBottomWidth: 1,
-    borderBottomColor: "#e5eefb",
-    paddingVertical: 12,
-  },
-  itemDataHora: {
-    fontFamily: "Montserrat_600SemiBold",
-    fontSize: 16,
-    color: "#2060ae",
-  },
-  itemMedico: {
-    fontFamily: "Montserrat_400Regular",
+  especialidade: {
+    fontFamily: 'Montserrat_600SemiBold',
     fontSize: 15,
-    color: "#475a7f",
+    color: "#2680c2",
+    marginBottom: 8,
   },
-  itemEspecialidade: {
-    fontFamily: "Montserrat_400Regular",
-    fontSize: 14,
-    color: "#a3b1c6",
+  infoRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 4,
+    marginBottom: 2,
   },
-  buttonBack: {
-    marginTop: 22,
-    alignSelf: "center",
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-  },
-  buttonBackText: {
-    fontFamily: "Montserrat_600SemiBold",
+  dateText: {
     fontSize: 16,
     color: "#2060ae",
-    textDecorationLine: "underline",
-    letterSpacing: 0.3,
+    fontFamily: 'Montserrat_600SemiBold',
+  },
+  timeText: {
+    fontSize: 16,
+    color: "#e67e22",
+    fontFamily: 'Montserrat_700Bold',
+  },
+  emptyText: {
+    textAlign: "center",
+    color: "#2060ae",
+    fontFamily: 'Montserrat_600SemiBold',
+    fontSize: 16,
+    marginTop: 18,
+  },
+  backBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: "#e7f1fd",
+    borderRadius: 12,
+    alignSelf: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    marginTop: 18,
+    marginBottom: 3,
+  },
+  backBtnText: {
+    fontFamily: 'Montserrat_600SemiBold',
+    color: "#2060ae",
+    fontSize: 16,
+  },
+  deleteButton: {
+    marginTop: 10,
+    backgroundColor: "#e74c3c",
+    borderRadius: 12,
+    paddingVertical: 9,
+    alignItems: "center",
+  },
+  deleteButtonText: {
+    color: "#fff",
+    fontFamily: 'Montserrat_700Bold',
+    fontSize: 16,
   },
 });

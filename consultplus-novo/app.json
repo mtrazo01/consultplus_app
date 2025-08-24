@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "ConsultPlus",
-    "slug": "ConsultPlus APP",
+    "slug": "ConsultPlus-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/splash.png",
@@ -13,20 +13,38 @@
       "backgroundColor": "#437659"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.mtrazo01.ConsultPlusapp",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.mtrazo01.ConsultPlusapp"
     },
     "web": {
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
-      "expo-font"
-    ]
+      "expo-font",
+      "expo-router"
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "b8d6d3d0-4695-46aa-a04b-51262a6d79b3"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/b8d6d3d0-4695-46aa-a04b-51262a6d79b3"
+    }
   }
 }

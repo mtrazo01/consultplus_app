@@ -1,14 +1,23 @@
-import React, { useState, useEffect } from 'react';
 import {
-  View, Text, TextInput, TouchableOpacity, StyleSheet, Animated, Alert,
-  Dimensions, StatusBar
-} from 'react-native';
-import MaskInput, { Masks } from 'react-native-mask-input';
-import { useNavigation } from '@react-navigation/native';
-import { useFonts,
-  Montserrat_700Bold, Montserrat_400Regular, Montserrat_600SemiBold
+  Montserrat_400Regular, Montserrat_600SemiBold,
+  Montserrat_700Bold,
+  useFonts
 } from '@expo-google-fonts/montserrat';
+import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import { useEffect, useState } from 'react';
+import {
+  Alert,
+  Animated,
+  Dimensions,
+  Image,
+  StatusBar,
+  StyleSheet,
+  Text, TextInput, TouchableOpacity,
+  View
+} from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import MaskInput, { Masks } from 'react-native-mask-input';
 import api from '../services/api';
 
 const { width, height } = Dimensions.get('window');
@@ -47,8 +56,8 @@ const CadastroScreen = () => {
 
   if (!fontsLoaded) {
     return (
-      <View style={styles.loaderBox}>
-        <Text style={{ fontSize: 20, fontFamily: 'Montserrat_400Regular', color: '#2f507b' }}>
+      <View style={styles.bg}>
+        <Text style={{ fontSize: 20, fontFamily: 'Montserrat_400Regular', color: '#2060ae' }}>
           Carregando...
         </Text>
       </View>
@@ -57,9 +66,7 @@ const CadastroScreen = () => {
 
   return (
     <View style={styles.bg}>
-      <StatusBar barStyle="light-content" backgroundColor="#2060ae" />
-      <View style={styles.circleLeft} />
-      <View style={styles.circleRight} />
+      <StatusBar barStyle="light-content" backgroundColor="#0f2027" />
       <KeyboardAwareScrollView
         contentContainerStyle={styles.scroll}
         enableOnAndroid
@@ -67,6 +74,14 @@ const CadastroScreen = () => {
         showsVerticalScrollIndicator={false}
       >
         <Animated.View style={[styles.card, { opacity: fadeAnim }]}>
+          {/* Logo */}
+          <View style={styles.logoBox}>
+            <Image
+              source={require('../../assets/images/login-illustration.png')}
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
+          </View>
           <Text style={styles.title}>Cadastro</Text>
           <Text style={styles.subtitle}>Preencha seus dados para criar a conta</Text>
 
@@ -76,7 +91,7 @@ const CadastroScreen = () => {
               value={nome}
               onChangeText={setNome}
               style={styles.input}
-              placeholderTextColor="#a3b1c6"
+              placeholderTextColor="#7ba8cc"
               autoCapitalize="words"
             />
           </View>
@@ -88,7 +103,7 @@ const CadastroScreen = () => {
               placeholder="CPF"
               keyboardType="numeric"
               style={styles.input}
-              placeholderTextColor="#a3b1c6"
+              placeholderTextColor="#7ba8cc"
             />
           </View>
           <View style={styles.inputBox}>
@@ -97,7 +112,7 @@ const CadastroScreen = () => {
               value={senha}
               onChangeText={setSenha}
               style={styles.input}
-              placeholderTextColor="#a3b1c6"
+              placeholderTextColor="#7ba8cc"
               secureTextEntry
               autoCapitalize="none"
             />
@@ -107,8 +122,13 @@ const CadastroScreen = () => {
             <Text style={styles.buttonText}>Cadastrar</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.7}>
-            <Text style={styles.link}>Voltar ao login</Text>
+          <TouchableOpacity
+            style={styles.backBtn}
+            activeOpacity={0.8}
+            onPress={() => navigation.navigate('Login')}
+          >
+            <Ionicons name="arrow-back" size={20} color="#2060ae" style={{ marginRight: 5 }} />
+            <Text style={styles.backBtnText}>Voltar ao Login</Text>
           </TouchableOpacity>
         </Animated.View>
       </KeyboardAwareScrollView>
@@ -119,57 +139,41 @@ const CadastroScreen = () => {
 const styles = StyleSheet.create({
   bg: {
     flex: 1,
-    backgroundColor: '#2060ae',
+    backgroundColor: "#0f2027",
     justifyContent: 'center'
-  },
-  circleLeft: {
-    position: 'absolute',
-    top: -60,
-    left: -60,
-    width: 170,
-    height: 170,
-    backgroundColor: '#67aaff',
-    borderRadius: 85,
-    opacity: 0.15,
-    zIndex: 0
-  },
-  circleRight: {
-    position: 'absolute',
-    bottom: -40,
-    right: -55,
-    width: 120,
-    height: 120,
-    backgroundColor: '#41d6ff',
-    borderRadius: 60,
-    opacity: 0.15,
-    zIndex: 0
   },
   scroll: {
     flexGrow: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    minHeight: height
-  },
-  loaderBox: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#2060ae'
+    minHeight: height,
   },
   card: {
-    width: width * 0.91,
+    width: width * 0.92,
     maxWidth: 390,
-    backgroundColor: 'white',
-    borderRadius: 22,
+    backgroundColor: "#fff",
+    borderRadius: 26,
     paddingVertical: 36,
     paddingHorizontal: 25,
     alignItems: 'stretch',
     elevation: 14,
     shadowColor: '#222b3a',
     shadowOffset: { width: 0, height: 7 },
-    shadowOpacity: 0.15,
-    shadowRadius: 15,
-    zIndex: 1
+    shadowOpacity: 0.12,
+    shadowRadius: 14,
+    zIndex: 2,
+    marginVertical: 36,
+  },
+  logoBox: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 14,
+  },
+  logoImage: {
+    width: 110,
+    height: 110,
+    borderRadius: 22,
+    backgroundColor: "#fff",
   },
   title: {
     fontFamily: 'Montserrat_700Bold',
@@ -187,21 +191,21 @@ const styles = StyleSheet.create({
     marginBottom: 20
   },
   inputBox: {
-    backgroundColor: '#f2f7fb',
-    borderRadius: 11,
+    backgroundColor: "#e7f1fd",
+    borderRadius: 13,
     marginBottom: 13,
     borderWidth: 1,
-    borderColor: '#e5eefb'
+    borderColor: "#e5eefb"
   },
   input: {
     fontFamily: 'Montserrat_400Regular',
     padding: 13,
     fontSize: 16,
-    color: '#263f5e'
+    color: '#293857'
   },
   button: {
-    backgroundColor: '#2b8ed6',
-    borderRadius: 9,
+    backgroundColor: '#2060ae',
+    borderRadius: 12,
     paddingVertical: 15,
     marginTop: 10,
     marginBottom: 10,
@@ -218,15 +222,22 @@ const styles = StyleSheet.create({
     fontSize: 17.5,
     letterSpacing: 1
   },
-  link: {
+  backBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: "#e7f1fd",
+    borderRadius: 12,
+    alignSelf: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    marginTop: 4,
+    marginBottom: 3,
+  },
+  backBtnText: {
     fontFamily: 'Montserrat_600SemiBold',
-    color: '#2060ae',
-    textAlign: 'center',
+    color: "#2060ae",
     fontSize: 16,
-    marginTop: 3,
-    textDecorationLine: 'underline',
-    letterSpacing: 0.25
-  }
+  },
 });
 
 export default CadastroScreen;
