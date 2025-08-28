@@ -30,4 +30,42 @@ async function loginUsuario(req, res) {
   }
 }
 
-module.exports = { criarUsuario, loginUsuario };
+async function atualizarUsuario(req, res) {
+  const { id } = req.params;
+  const { nome, cpf, senha } = req.body;
+  try {
+    const result = await db.query(
+      'UPDATE usuarios SET nome = $1, cpf = $2, senha = $3 WHERE id = $4 RETURNING *',
+      [nome, cpf, senha, id]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ erro: 'Usuário não encontrado' });
+    }
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ erro: err.message });
+  }
+}
+
+async function excluirUsuario(req, res) {
+  const { id } = req.params;
+  try {
+    const result = await db.query(
+      'DELETE FROM usuarios WHERE id = $1 RETURNING *',
+      [id]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ erro: 'Usuário não encontrado' });
+    }
+    res.json({ mensagem: 'Usuário excluído com sucesso' });
+  } catch (err) {
+    res.status(500).json({ erro: err.message });
+  }
+}
+
+module.exports = {
+  criarUsuario,
+  loginUsuario,
+  atualizarUsuario,
+  excluirUsuario
+};

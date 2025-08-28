@@ -5,6 +5,7 @@ const pool = new Pool({
   host: 'localhost',
   database: 'consultplus',    
   password: 'postgree', 
+  
 
 });
 
