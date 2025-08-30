@@ -1,12 +1,12 @@
-const { Pool } = require('pg');
+const { Pool } = require("pg");
+require("dotenv").config();
 
 const pool = new Pool({
-  user: "consultplus_user",
-  host: "dpg-d2ns1iripnbc73csqsq0-a.oregon-postgres.render.com",
-  database: "consultplus",
-  password: "AbQEXFCTxQMDmquXnt3ppBOuovoIwyIM",
-  port: 5432,
-  ssl: { rejectUnauthorized: false }
+  user: process.env.DB_USER,
+  host: process.env.DB_HOST,
+  database: process.env.DB_NAME,
+  password: process.env.DB_PASS,
+  port: process.env.DB_PORT,
 });
 
 module.exports = pool;
