@@ -5,8 +5,8 @@ import {
   useFonts,
 } from "@expo-google-fonts/montserrat";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
-import { useEffect, useRef } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useEffect, useRef, useState } from "react";
 import {
   Animated,
   Dimensions,
@@ -21,7 +21,7 @@ import {
 const { width } = Dimensions.get("window");
 
 export default function HomeScreen({ route, navigation }) {
-  const { usuario } = route.params || {};
+  const [usuario, setUsuario] = useState(route.params?.usuario || null);
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   const [fontsLoaded] = useFonts({
@@ -29,6 +29,20 @@ export default function HomeScreen({ route, navigation }) {
     Montserrat_400Regular,
     Montserrat_600SemiBold,
   });
+
+  useEffect(() => {
+    async function carregarUsuario() {
+      if (!usuario) {
+        try {
+          const nome = await AsyncStorage.getItem("nome");
+          if (nome) setUsuario({ nome });
+        } catch (e) {
+          console.log("Erro ao carregar usuário:", e);
+        }
+      }
+    }
+    carregarUsuario();
+  }, []);
 
   useEffect(() => {
     Animated.timing(fadeAnim, {
@@ -41,27 +55,15 @@ export default function HomeScreen({ route, navigation }) {
   if (!fontsLoaded) {
     return (
       <View style={styles.loaderBox}>
-        <Text style={{
-          fontFamily: "Montserrat_400Regular",
-          color: "#fff",
-          fontSize: 18,
-        }}>
-          Carregando fontes...
-        </Text>
+        <Text style={styles.loaderText}>Carregando...</Text>
       </View>
     );
   }
 
   return (
-    <LinearGradient
-      colors={["#0f2027", "#203a43", "#2c5364"]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={styles.bg}
-    >
-      <StatusBar backgroundColor="#0f2027" barStyle="light-content" />
+    <View style={styles.bg}>
+      <StatusBar backgroundColor="#0D47A1" barStyle="light-content" />
       <Animated.View style={[styles.card, { opacity: fadeAnim }]}>
-        {/* Header (logo + botão logout) */}
         <View style={styles.headerArea}>
           <View style={{ flexDirection: "row", alignItems: "center" }}>
             <Image
@@ -71,94 +73,101 @@ export default function HomeScreen({ route, navigation }) {
             />
             <Text style={styles.logoText}>ConsultPlus</Text>
           </View>
-          <TouchableOpacity onPress={() => navigation.reset({index: 0, routes: [{ name: "Login" }]})}>
-            <MaterialIcons name="logout" size={30} color="#2060ae" />
+
+          <TouchableOpacity
+            onPress={() => navigation.reset({ index: 0, routes: [{ name: "Login" }] })}
+          >
+            <MaterialIcons name="logout" size={30} color="#D32F2F" />
           </TouchableOpacity>
         </View>
 
-        {/* Boas vindas */}
+      
         <Text style={styles.saudacao}>Bem-vindo,</Text>
-        <Text style={styles.nome}>{usuario?.nome?.trim() || "Teste"}</Text>
+        <Text style={styles.nome}>{usuario?.nome?.trim() || "Usuário"}</Text>
 
-        {/* Primeira linha: Agendar Consulta + Histórico */}
+   
         <View style={styles.row}>
-          <TouchableOpacity 
-            style={styles.cardBtn}
-            activeOpacity={0.88}
+          <HomeButton
+            icon="calendar-outline"
+            label="Agendar Consulta"
+            color="#1976D2"
             onPress={() => navigation.navigate("AgendarConsulta", { usuario })}
-          >
-            <Ionicons name="calendar-outline" size={38} color="#41d6ff" />
-            <Text style={styles.cardBtnText}>Agende sua Consulta</Text>
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={styles.cardBtn}
-            activeOpacity={0.88}
+          />
+          <HomeButton
+            icon="time-outline"
+            label="Agendamentos"
+            color="#0288D1"
             onPress={() => navigation.navigate("HistoricoConsultas", { usuario })}
-          >
-            <Ionicons name="time-outline" size={38} color="#41d6ff" />
-            <Text style={styles.cardBtnText}>Histórico de Consultas</Text>
-          </TouchableOpacity>
+          />
         </View>
-        {/* Segunda linha: Perfil + Notificações */}
+
         <View style={styles.row}>
-          <TouchableOpacity 
-            style={styles.cardBtn}
-            activeOpacity={0.88}
+          <HomeButton
+            icon="person-circle-outline"
+            label="Editar Perfil"
+            color="#388E3C"
             onPress={() => navigation.navigate("Perfil", { usuario })}
-          >
-            <Ionicons name="person-circle-outline" size={38} color="#41d6ff" />
-            <Text style={styles.cardBtnText}>Perfil</Text>
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={styles.cardBtn}
-            activeOpacity={0.88}
-            onPress={() => navigation.navigate("Notificacoes", { usuario })}
-          >
-            <Ionicons name="notifications-outline" size={38} color="#41d6ff" />
-            <Text style={styles.cardBtnText}>Notificações</Text>
-          </TouchableOpacity>
+          />
+          <HomeButton
+            icon="location-outline"
+            label="UBS Próximas"
+            color="#FBC02D"
+            onPress={() => navigation.navigate("UbsProximas", { usuario })}
+          />
         </View>
       </Animated.View>
-    </LinearGradient>
+    </View>
   );
 }
 
-const CARD_SIZE = (width * 0.90 - 32) / 2;
+function HomeButton({ icon, label, color, onPress }) {
+  return (
+    <TouchableOpacity style={styles.cardBtn} activeOpacity={0.85} onPress={onPress}>
+      <Ionicons name={icon} size={38} color={color} />
+      <Text style={styles.cardBtnText}>{label}</Text>
+    </TouchableOpacity>
+  );
+}
+
+const CARD_SIZE = (width * 0.9 - 32) / 2;
 
 const styles = StyleSheet.create({
   bg: {
     flex: 1,
+    backgroundColor: "#F5F5F5",
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#0f2027",
   },
   loaderBox: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#0f2027",
+    backgroundColor: "#F5F5F5",
+  },
+  loaderText: {
+    fontFamily: "Montserrat_400Regular",
+    color: "#000",
+    fontSize: 18,
   },
   card: {
     width: width * 0.94,
     maxWidth: 420,
-    backgroundColor: "#fff",
-    borderRadius: 26,
-    paddingVertical: 32,
-    paddingHorizontal: 18,
-    alignItems: "stretch",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 20,
+    paddingVertical: 26,
+    paddingHorizontal: 20,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.14,
-    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
     borderWidth: 1,
-    borderColor: "rgba(90,200,255,0.10)",
+    borderColor: "#E0E0E0",
   },
   headerArea: {
-    width: "100%",
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 15,
+    marginBottom: 20,
   },
   logoImage: {
     width: 46,
@@ -167,48 +176,42 @@ const styles = StyleSheet.create({
   },
   logoText: {
     fontFamily: "Montserrat_700Bold",
-    color: "#2060ae",
+    color: "#0D47A1",
     fontSize: 22,
     letterSpacing: 0.8,
   },
   saudacao: {
     fontFamily: "Montserrat_400Regular",
-    fontSize: 18,
-    color: "#2060ae",
-    marginBottom: 2,
-    marginLeft: 2,
+    fontSize: 17,
+    color: "#000",
   },
   nome: {
     fontFamily: "Montserrat_700Bold",
     fontSize: 23,
-    color: "#293857",
-    marginBottom: 18,
-    marginLeft: 2,
+    color: "#0D47A1",
+    marginBottom: 24,
   },
   row: {
-    width: "100%",
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 14,
+    marginBottom: 16,
   },
   cardBtn: {
     width: CARD_SIZE,
     height: CARD_SIZE,
-    backgroundColor: "#e7f1fd",
+    backgroundColor: "#E3F2FD",
     borderRadius: 16,
     justifyContent: "center",
     alignItems: "center",
-    marginHorizontal: 6,
-    borderWidth: 1.2,
-    borderColor: "rgba(90,180,255,0.13)",
+    borderWidth: 1,
+    borderColor: "#BBDEFB",
     elevation: 2,
   },
   cardBtnText: {
     fontFamily: "Montserrat_600SemiBold",
-    color: "#293857",
-    fontSize: 16,
-    marginTop: 14,
+    color: "#000",
+    fontSize: 15,
+    marginTop: 10,
     textAlign: "center",
-    letterSpacing: 0.5,
   },
 });

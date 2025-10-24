@@ -1,6 +1,11 @@
+import {
+  Montserrat_400Regular,
+  Montserrat_600SemiBold,
+  Montserrat_700Bold,
+  useFonts,
+} from '@expo-google-fonts/montserrat';
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation, useRoute } from "@react-navigation/native";
-import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -16,25 +21,36 @@ import {
 } from "react-native";
 import api from "../services/api";
 
-import {
-  Montserrat_400Regular,
-  Montserrat_600SemiBold,
-  Montserrat_700Bold,
-  useFonts,
-} from '@expo-google-fonts/montserrat';
-
 const { width, height } = Dimensions.get("window");
+
+const theme = {
+  colors: {
+    primaryDark: "#0B3D91",
+    primary: "#1976D2",
+    background: "#F7F7F7",
+    card: "#FFFFFF",
+    text: "#000000",
+    border: "#DCE6F1",
+    infoIcon: "#1976D2",
+    timeIcon: "#F57C00",
+    delete: "#D32F2F",
+    backBtn: "#1976D2",
+  },
+  radius: {
+    sm: 12,
+    md: 16,
+    lg: 24,
+  },
+};
 
 export default function HistoricoScreen() {
   const route = useRoute();
   const navigation = useNavigation();
   const { usuario } = route.params || {};
-  const usuarioId =
-    usuario?.id || usuario?.userId || usuario?.usuario_id || undefined;
+  const usuarioId = usuario?.id || usuario?.userId || usuario?.usuario_id;
 
   const [consultas, setConsultas] = useState([]);
   const [loading, setLoading] = useState(true);
-
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   let [fontsLoaded] = useFonts({
@@ -67,84 +83,81 @@ export default function HistoricoScreen() {
     }).start();
   }, [usuarioId]);
 
-  const renderItem = ({ item }) => (
-    <Animated.View style={[styles.cardConsulta, { opacity: fadeAnim }]}>
-      <Text style={styles.medico}>👨‍⚕️ {item.medico}</Text>
-      <Text style={styles.especialidade}>💊 {item.especialidade}</Text>
+  const renderItem = ({ item }) => {
+    const dataLocal = new Date(item.data_hora); // interpreta string ISO UTC
 
-      <View style={styles.infoRow}>
-        <Text style={styles.dateText}>
-          📅 {new Date(item.data_hora).toLocaleDateString()}
+    return (
+      <Animated.View style={[styles.cardConsulta, { opacity: fadeAnim }]}>
+        <Text style={styles.medico}>
+          <Ionicons name="person-circle-outline" size={20} color={theme.colors.infoIcon} /> {item.medico}
         </Text>
-        <Text style={styles.timeText}>
-          ⏰{" "}
-          {new Date(item.data_hora).toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          })}
+        <Text style={styles.especialidade}>
+          <Ionicons name="medkit-outline" size={18} color={theme.colors.primary} /> {item.especialidade}
         </Text>
-      </View>
 
-      {/* Botão de excluir */}
-      <TouchableOpacity
-        style={styles.deleteButton}
-        onPress={() =>
-          Alert.alert(
-            "Excluir Consulta",
-            "Deseja realmente excluir esta consulta?",
-            [
-              { text: "Cancelar", style: "cancel" },
-              {
-                text: "Excluir",
-                style: "destructive",
-                onPress: async () => {
-                  try {
-                    await api.delete(`/consultas/${item.id}`);
-                    setConsultas((prev) =>
-                      prev.filter((c) => c.id !== item.id)
-                    );
-                    Alert.alert("Sucesso", "Consulta excluída!");
-                  } catch (err) {
-                    Alert.alert(
-                      "Erro",
-                      "Não foi possível excluir a consulta."
-                    );
-                  }
+        <View style={styles.infoRow}>
+          <Text style={styles.dateText}>
+            <Ionicons name="calendar-outline" size={16} color={theme.colors.infoIcon} />{" "}
+            {dataLocal.toLocaleDateString("pt-BR")}
+          </Text>
+          <Text style={styles.timeText}>
+            <Ionicons name="time-outline" size={16} color={theme.colors.timeIcon} />{" "}
+            {dataLocal.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+          </Text>
+        </View>
+
+        <TouchableOpacity
+          style={styles.deleteButton}
+          onPress={() =>
+            Alert.alert(
+              "Excluir Consulta",
+              "Deseja realmente excluir esta consulta?",
+              [
+                { text: "Cancelar", style: "cancel" },
+                {
+                  text: "Excluir",
+                  style: "destructive",
+                  onPress: async () => {
+                    try {
+                      await api.delete(`/consultas/${item.id}`);
+                      setConsultas((prev) => prev.filter((c) => c.id !== item.id));
+                      Alert.alert("Sucesso", "Consulta excluída!");
+                    } catch (err) {
+                      Alert.alert("Erro", "Não foi possível excluir a consulta.");
+                    }
+                  },
                 },
-              },
-            ]
-          )
-        }
-      >
-        <Text style={styles.deleteButtonText}>🗑️ Excluir</Text>
-      </TouchableOpacity>
-    </Animated.View>
-  );
+              ],
+            )
+          }
+        >
+          <Text style={styles.deleteButtonText}>Excluir</Text>
+        </TouchableOpacity>
+      </Animated.View>
+    );
+  };
 
   if (!fontsLoaded) {
     return (
-      <View style={styles.bg}>
-        <Text style={{ fontFamily: 'Montserrat_400Regular', color: '#2060ae', fontSize: 18 }}>Carregando...</Text>
+      <View style={[styles.bg, { justifyContent: "center", alignItems: "center" }]}>
+        <Text style={{ fontFamily: 'Montserrat_400Regular', color: theme.colors.primary, fontSize: 18 }}>
+          Carregando...
+        </Text>
       </View>
     );
   }
 
   return (
-    <LinearGradient
-      colors={["#0f2027", "#203a43", "#2c5364"]}
-      style={styles.bg}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-    >
-      <StatusBar backgroundColor="#0f2027" barStyle="light-content" />
+    <View style={styles.bg}>
+      <StatusBar backgroundColor={theme.colors.primaryDark} barStyle="light-content" />
       <Animated.View style={[styles.card, { opacity: fadeAnim }]}>
         <Text style={styles.title}>
-          <Text style={{ color: "#2060ae" }}>Histórico</Text>{" "}
-          <Text style={{ color: "#2680c2" }}>de Consultas</Text>
+          <Text style={{ color: theme.colors.primary }}>Histórico</Text>{" "}
+          <Text style={{ color: theme.colors.primaryDark }}>de Consultas</Text>
         </Text>
 
         {loading ? (
-          <ActivityIndicator size="large" color="#2060ae" />
+          <ActivityIndicator size="large" color={theme.colors.primary} />
         ) : consultas.length === 0 ? (
           <Text style={styles.emptyText}>Nenhuma consulta encontrada.</Text>
         ) : (
@@ -157,74 +170,74 @@ export default function HistoricoScreen() {
           />
         )}
 
-        {/* Botão Voltar */}
         <TouchableOpacity
           style={styles.backBtn}
           activeOpacity={0.8}
           onPress={() => navigation.navigate('Home', { usuario })}
         >
-          <Ionicons name="arrow-back" size={20} color="#2060ae" style={{ marginRight: 5 }} />
-          <Text style={styles.backBtnText}>Voltar para Home</Text>
+          <Ionicons name="arrow-back" size={20} color={theme.colors.backBtn} style={{ marginRight: 5 }} />
+          <Text style={styles.backBtnText}>Voltar</Text>
         </TouchableOpacity>
       </Animated.View>
-    </LinearGradient>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   bg: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#0f2027",
+    backgroundColor: theme.colors.background,
+    paddingTop: 20,
   },
   card: {
     width: width * 0.94,
     maxWidth: 410,
-    backgroundColor: "#fff",
-    borderRadius: 24,
+    backgroundColor: theme.colors.card,
+    borderRadius: theme.radius.lg,
     paddingVertical: 30,
     paddingHorizontal: 19,
-    elevation: 10,
+    elevation: 5,
     shadowColor: "#000",
-    shadowOpacity: 0.17,
-    shadowOffset: { width: 0, height: 8 },
-    shadowRadius: 8,
-    alignItems: 'stretch',
-    marginVertical: 30,
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 6 },
+    shadowRadius: 6,
+    alignItems: "stretch",
+    marginVertical: 20,
+    alignSelf: "center",
   },
   title: {
     fontFamily: 'Montserrat_700Bold',
     fontSize: 26,
     textAlign: "center",
     marginBottom: 18,
+    color: theme.colors.text,
   },
   list: {
     maxHeight: height * 0.5,
     marginBottom: 8,
   },
   cardConsulta: {
-    backgroundColor: "#e7f1fd",
-    borderRadius: 17,
+    backgroundColor: theme.colors.card,
+    borderRadius: theme.radius.md,
     padding: 15,
     marginBottom: 14,
     borderWidth: 1,
-    borderColor: "#d9e3fa",
+    borderColor: theme.colors.border,
     shadowColor: "#000",
-    shadowOpacity: 0.09,
-    shadowRadius: 5,
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
     elevation: 2,
   },
   medico: {
     fontFamily: 'Montserrat_700Bold',
     fontSize: 18,
-    color: "#2060ae",
-    marginBottom: 2,
+    color: theme.colors.primaryDark,
+    marginBottom: 4,
   },
   especialidade: {
     fontFamily: 'Montserrat_600SemiBold',
     fontSize: 15,
-    color: "#2680c2",
+    color: theme.colors.primary,
     marginBottom: 8,
   },
   infoRow: {
@@ -235,41 +248,43 @@ const styles = StyleSheet.create({
   },
   dateText: {
     fontSize: 16,
-    color: "#2060ae",
+    color: theme.colors.primaryDark,
     fontFamily: 'Montserrat_600SemiBold',
   },
   timeText: {
     fontSize: 16,
-    color: "#e67e22",
+    color: theme.colors.timeIcon,
     fontFamily: 'Montserrat_700Bold',
   },
   emptyText: {
     textAlign: "center",
-    color: "#2060ae",
+    color: theme.colors.primaryDark,
     fontFamily: 'Montserrat_600SemiBold',
     fontSize: 16,
     marginTop: 18,
   },
   backBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: "#e7f1fd",
-    borderRadius: 12,
-    alignSelf: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: theme.colors.card,
+    borderRadius: theme.radius.md,
+    alignSelf: "center",
     paddingVertical: 10,
     paddingHorizontal: 18,
     marginTop: 18,
     marginBottom: 3,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
   },
   backBtnText: {
     fontFamily: 'Montserrat_600SemiBold',
-    color: "#2060ae",
+    color: theme.colors.backBtn,
     fontSize: 16,
   },
   deleteButton: {
     marginTop: 10,
-    backgroundColor: "#e74c3c",
-    borderRadius: 12,
+    backgroundColor: theme.colors.delete,
+    borderRadius: theme.radius.sm,
     paddingVertical: 9,
     alignItems: "center",
   },

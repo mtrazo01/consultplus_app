@@ -3,11 +3,10 @@ import {
   Montserrat_600SemiBold,
   Montserrat_700Bold,
   useFonts,
-} from '@expo-google-fonts/montserrat';
-import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useEffect, useRef, useState } from 'react';
+} from "@expo-google-fonts/montserrat";
+import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import { useEffect, useRef, useState } from "react";
 import {
   Alert,
   Animated,
@@ -18,32 +17,58 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View
-} from 'react-native';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import MaskInput, { Masks } from 'react-native-mask-input';
-import api from '../services/api';
+  View,
+} from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import MaskInput, { Masks } from "react-native-mask-input";
+import api from "../services/api";
 
-const { width } = Dimensions.get('window');
+const { width } = Dimensions.get("window");
+
+// --- 🎨 Design Tokens (e-SUS APS/PEC) ---
+const theme = {
+  colors: {
+    primaryDark: "#0B3D91", // azul escuro oficial
+    primary: "#1976D2",     // azul médio oficial
+    card: "#FFFFFF",
+    background: "#F7F7F7", // cinza claríssimo
+    text: "#000000",
+    placeholder: "#757575",
+    border: "#DCE6F1",
+    personIcon: "#1976D2",   // azul
+    lockIcon: "#F57C00",     // laranja
+  },
+  fonts: {
+    regular: "Montserrat_400Regular",
+    semibold: "Montserrat_600SemiBold",
+    bold: "Montserrat_700Bold",
+  },
+  radius: {
+    sm: 12,
+    md: 16,
+    lg: 28,
+  },
+};
 
 export default function LoginScreen() {
   const navigation = useNavigation();
-  const [cpf, setCpf] = useState('');
-  const [senha, setSenha] = useState('');
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(0.9)).current;
+  const [cpf, setCpf] = useState("");
+  const [senha, setSenha] = useState("");
 
-  let [fontsLoaded] = useFonts({
-    Montserrat_700Bold,
-    Montserrat_400Regular,
-    Montserrat_600SemiBold,
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.95)).current;
+
+  const [fontsLoaded] = useFonts({
+    [theme.fonts.bold]: Montserrat_700Bold,
+    [theme.fonts.regular]: Montserrat_400Regular,
+    [theme.fonts.semibold]: Montserrat_600SemiBold,
   });
 
   useEffect(() => {
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 1000,
+        duration: 800,
         useNativeDriver: true,
       }),
       Animated.spring(scaleAnim, {
@@ -56,42 +81,43 @@ export default function LoginScreen() {
 
   const login = async () => {
     if (!cpf || !senha) {
-      Alert.alert('⚠️ Campos obrigatórios', 'Preencha CPF e Senha.');
+      Alert.alert("⚠️ Campos obrigatórios", "Preencha CPF e Senha.");
       return;
     }
 
     try {
-      const response = await api.post('/usuarios/login', {
-        cpf: cpf.replace(/\D/g, ''),
+      const response = await api.post("/usuarios/login", {
+        cpf: cpf.replace(/\D/g, ""),
         senha,
       });
 
       const usuarioLogado = response.data.usuario;
-      Alert.alert('✅ Login realizado com sucesso!');
-      navigation.navigate('Home', { usuario: usuarioLogado });
+      Alert.alert("✅ Login realizado com sucesso!");
+      navigation.navigate("Home", { usuario: usuarioLogado });
     } catch (error) {
-      Alert.alert('❌ Erro no login', 'CPF ou senha incorretos.');
+      Alert.alert("❌ Erro no login", "CPF ou senha incorretos.");
     }
   };
 
   if (!fontsLoaded) {
     return (
       <View style={styles.loaderBox}>
-        <Text style={{ fontSize: 20, fontFamily: 'Montserrat_400Regular', color: '#fff' }}>
-          Carregando...
+        <Text
+          style={{
+            fontFamily: theme.fonts.regular,
+            color: theme.colors.text,
+            fontSize: 18,
+          }}
+        >
+          Carregando fontes...
         </Text>
       </View>
     );
   }
 
   return (
-    <LinearGradient
-      colors={["#0f2027", "#203a43", "#2c5364"]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={styles.bg}
-    >
-      <StatusBar barStyle="light-content" backgroundColor="#0f2027" />
+    <View style={styles.container}>
+      <StatusBar backgroundColor={theme.colors.primaryDark} barStyle="light-content" />
       <KeyboardAwareScrollView
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
@@ -105,25 +131,30 @@ export default function LoginScreen() {
             { opacity: fadeAnim, transform: [{ scale: scaleAnim }] },
           ]}
         >
-          {/* LOGO – fundo branco destacando a imagem */}
+          {/* LOGO */}
           <View style={styles.logoBox}>
             <Image
-              source={require('../../assets/images/login-illustration.png')}
+              source={require("../../assets/images/login-illustration.png")}
               style={styles.image}
               resizeMode="contain"
             />
           </View>
 
-          {/* Nome do app */}
+          {/* Título */}
           <Text style={styles.title}>
-            <Text style={{ color: '#2680c2' }}>Consult</Text>
-            <Text style={{ color: '#2060ae' }}>Plus</Text>
+            <Text style={{ color: theme.colors.primary }}>Consult</Text>
+            <Text style={{ color: theme.colors.primaryDark }}>Plus</Text>
           </Text>
-          <Text style={styles.subtitle}>Sua saúde na palma da mão</Text>
+          <Text style={styles.subtitle}>Inovação que cuida.</Text>
 
-          {/* CPF */}
+          {/* Campo CPF */}
           <View style={styles.inputBox}>
-            <Ionicons name="person-outline" size={22} color="#41d6ff" style={styles.icon} />
+            <Ionicons
+              name="person-outline"
+              size={22}
+              color={theme.colors.personIcon}
+              style={styles.icon}
+            />
             <MaskInput
               value={cpf}
               onChangeText={setCpf}
@@ -131,140 +162,153 @@ export default function LoginScreen() {
               placeholder="Digite seu CPF"
               keyboardType="numeric"
               style={styles.input}
-              placeholderTextColor="#7baedd"
+              placeholderTextColor={theme.colors.placeholder}
             />
           </View>
 
-          {/* Senha */}
+          {/* Campo Senha */}
           <View style={styles.inputBox}>
-            <Ionicons name="lock-closed-outline" size={22} color="#41d6ff" style={styles.icon} />
+            <Ionicons
+              name="lock-closed-outline"
+              size={22}
+              color={theme.colors.lockIcon}
+              style={styles.icon}
+            />
             <TextInput
               placeholder="Digite sua senha"
               secureTextEntry
               value={senha}
               onChangeText={setSenha}
               style={styles.input}
-              placeholderTextColor="#7baedd"
+              placeholderTextColor={theme.colors.placeholder}
             />
           </View>
 
           {/* Botão */}
-          <TouchableOpacity style={styles.buttonWrapper} onPress={login} activeOpacity={0.9}>
-            <LinearGradient colors={['#41d6ff', '#2060ae']} style={styles.button}>
+          <TouchableOpacity
+            style={styles.buttonWrapper}
+            onPress={login}
+            activeOpacity={0.9}
+          >
+            <View style={styles.button}>
               <Text style={styles.buttonText}>Entrar</Text>
-            </LinearGradient>
+            </View>
           </TouchableOpacity>
 
-          {/* Link cadastro */}
-          <TouchableOpacity onPress={() => navigation.navigate('Cadastro')} activeOpacity={0.7}>
+          {/* Link de cadastro */}
+          <TouchableOpacity
+            onPress={() => navigation.navigate("Cadastro")}
+            activeOpacity={0.7}
+          >
             <Text style={styles.link}>Criar conta</Text>
           </TouchableOpacity>
         </Animated.View>
       </KeyboardAwareScrollView>
-    </LinearGradient>
+    </View>
   );
 }
 
+// --- Estilos e-SUS ---
 const styles = StyleSheet.create({
-  bg: {
+  container: {
     flex: 1,
-    backgroundColor: "#0f2027",
+    backgroundColor: theme.colors.background,
   },
   scroll: {
     flexGrow: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     paddingBottom: 20,
   },
   loaderBox: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#0f2027',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: theme.colors.background,
   },
   card: {
-    width: width * 0.92,
-    maxWidth: 390,
-    backgroundColor: '#fff', // branco puro, destaque para logo e inputs
-    borderRadius: 26,
-    paddingVertical: 38,
-    paddingHorizontal: 24,
-    alignItems: 'stretch',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.18,
-    shadowRadius: 12,
+    width: width * 0.9,
+    maxWidth: 400,
+    backgroundColor: theme.colors.card,
+    borderRadius: theme.radius.lg,
+    paddingVertical: 40,
+    paddingHorizontal: 26,
+    alignItems: "stretch",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 5,
     borderWidth: 1,
-    borderColor: 'rgba(90,200,255,0.13)',
+    borderColor: theme.colors.border,
   },
   logoBox: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 17,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 20,
   },
   image: {
-    width: 92,
-    height: 92,
-    borderRadius: 18,
-    backgroundColor: "#fff",
+    width: 100,
+    height: 100,
+    borderRadius: 22,
   },
   title: {
-    fontFamily: 'Montserrat_700Bold',
-    fontSize: 30,
-    textAlign: 'center',
-    marginBottom: 5,
-    letterSpacing: 2,
+    fontFamily: theme.fonts.bold,
+    fontSize: 32,
+    textAlign: "center",
+    marginBottom: 6,
+    letterSpacing: 1,
   },
   subtitle: {
-    fontFamily: 'Montserrat_400Regular',
-    color: '#2060ae',
-    fontSize: 15,
-    textAlign: 'center',
-    marginBottom: 24,
+    fontFamily: theme.fonts.regular,
+    color: theme.colors.text,
+    fontSize: 16,
+    textAlign: "center",
+    marginBottom: 26,
   },
   inputBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(230,241,255,0.85)', 
-    borderRadius: 14,
-    marginBottom: 15,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FAFAFA",
+    borderRadius: theme.radius.md,
+    marginBottom: 16,
     borderWidth: 1,
-    borderColor: 'rgba(65,214,255,0.23)',
-    paddingHorizontal: 10,
+    borderColor: theme.colors.border,
+    paddingHorizontal: 12,
   },
   icon: {
     marginRight: 8,
   },
   input: {
     flex: 1,
-    fontFamily: 'Montserrat_400Regular',
-    padding: 13,
+    fontFamily: theme.fonts.regular,
+    padding: 14,
     fontSize: 16,
-    color: '#293857',
+    color: theme.colors.text,
   },
   buttonWrapper: {
-    borderRadius: 14,
-    overflow: 'hidden',
-    marginBottom: 13,
-    marginTop: 8,
+    borderRadius: theme.radius.md,
+    overflow: "hidden",
+    marginBottom: 14,
+    marginTop: 10,
   },
   button: {
-    paddingVertical: 16,
-    alignItems: 'center',
-    backgroundColor: "transparent",
+    backgroundColor: theme.colors.primary,
+    paddingVertical: 18,
+    alignItems: "center",
+    borderRadius: theme.radius.md,
   },
   buttonText: {
-    fontFamily: 'Montserrat_600SemiBold',
-    color: '#fff',
+    fontFamily: theme.fonts.semibold,
+    color: "#FFFFFF",
     fontSize: 18,
-    letterSpacing: 1,
+    letterSpacing: 1.1,
   },
   link: {
-    fontFamily: 'Montserrat_600SemiBold',
-    color: '#2060ae',
-    textAlign: 'center',
+    fontFamily: theme.fonts.semibold,
+    color: theme.colors.primaryDark,
+    textAlign: "center",
     fontSize: 15,
-    marginTop: 4,
+    marginTop: 6,
   },
 });
-

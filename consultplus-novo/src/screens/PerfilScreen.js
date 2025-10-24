@@ -14,6 +14,7 @@ import {
   Dimensions,
   Image,
   KeyboardAvoidingView,
+  Modal,
   ScrollView,
   StatusBar,
   StyleSheet,
@@ -26,14 +27,56 @@ import api from '../services/api';
 
 const { width } = Dimensions.get('window');
 
+const theme = {
+  colors: {
+    primaryDark: "#0B3D91",
+    primary: "#1976D2",
+    background: "#F8F9FB",
+    card: "#FFFFFF",
+    text: "#000000",
+    border: "#DCE6F1",
+    placeholder: "#7ba8cc",
+    deleteGradientStart: "#ff6666",
+    deleteGradientEnd: "#cc0000",
+    backBtn: "#1976D2",
+  },
+  radius: {
+    sm: 12,
+    md: 14,
+    lg: 26,
+  },
+};
+
+// Funções de máscara
+const formatarCPF = (value) => {
+  const cpfNumeros = value.replace(/\D/g, '');
+  return cpfNumeros
+    .replace(/(\d{3})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+};
+
+const formatarTelefone = (value) => {
+  const telefoneNumeros = value.replace(/\D/g, '');
+  return telefoneNumeros
+    .replace(/^(\d{2})(\d)/g, '($1) $2')
+    .replace(/(\d{5})(\d)/, '$1-$2')
+    .slice(0, 15);
+};
+
+const limparNumeros = (valor) => valor.replace(/\D/g, '');
+
 export default function PerfilScreen({ route }) {
   const navigation = useNavigation();
   const { usuario } = route.params || {};
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   const [nome, setNome] = useState(usuario?.nome || '');
-  const [cpf, setCpf] = useState(usuario?.cpf || '');
+  const [cpf, setCpf] = useState(formatarCPF(usuario?.cpf || ''));
+  const [telefone, setTelefone] = useState(formatarTelefone(usuario?.telefone || ''));
   const [senha, setSenha] = useState(usuario?.senha || '');
+  const [confirmSenha, setConfirmSenha] = useState('');
+  const [modalVisible, setModalVisible] = useState(false);
 
   let [fontsLoaded] = useFonts({
     Montserrat_700Bold,
@@ -51,20 +94,22 @@ export default function PerfilScreen({ route }) {
 
   if (!fontsLoaded) {
     return (
-      <View style={styles.loaderBox}>
-        <Text style={{ fontFamily: 'Montserrat_400Regular', color: '#2060ae', fontSize: 18 }}>
+      <View style={[styles.loaderBox]}>
+        <Text style={{ fontFamily: 'Montserrat_400Regular', color: theme.colors.primary, fontSize: 18 }}>
           Carregando...
         </Text>
       </View>
     );
   }
 
+  // Atualizar usuário
   const atualizarConta = async () => {
     try {
-      const response = await api.put(`/usuarios/${usuario.id}`, {
+      await api.put(`/usuarios/${usuario.id}`, {
         nome,
-        cpf,
-        senha
+        cpf: limparNumeros(cpf),
+        senha,
+        telefone: limparNumeros(telefone),
       });
       Alert.alert('✅ Sucesso', 'Dados atualizados com sucesso!');
     } catch (err) {
@@ -73,39 +118,35 @@ export default function PerfilScreen({ route }) {
     }
   };
 
+  // Excluir conta com verificação de senha
+  const confirmarExclusao = () => {
+    setModalVisible(true);
+  };
+
   const excluirConta = async () => {
-    Alert.alert(
-      'Atenção',
-      'Deseja realmente excluir sua conta? Essa ação não pode ser desfeita.',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        { 
-          text: 'Excluir', 
-          style: 'destructive', 
-          onPress: async () => {
-            try {
-              await api.delete(`/usuarios/${usuario.id}`);
-              Alert.alert('✅ Conta excluída', 'Sua conta foi removida com sucesso.');
-              navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
-            } catch (err) {
-              Alert.alert('❌ Erro', 'Não foi possível excluir a conta.');
-              console.log(err);
-            }
-          } 
-        }
-      ]
-    );
+    if (confirmSenha !== senha) {
+      Alert.alert('⚠️ Atenção', 'Senha incorreta. Tente novamente.');
+      return;
+    }
+
+    try {
+      await api.delete(`/usuarios/${usuario.id}`);
+      Alert.alert('✅ Conta excluída', 'Sua conta foi removida com sucesso.');
+      setModalVisible(false);
+      navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
+    } catch (err) {
+      Alert.alert('❌ Erro', 'Não foi possível excluir a conta.');
+      console.log(err);
+    }
   };
 
   return (
-    <LinearGradient
-      colors={['#0f2027', '#203a43', '#2c5364']}
-      style={styles.bg}
-    >
-      <StatusBar backgroundColor="#0f2027" barStyle="light-content" />
+    <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+      <StatusBar backgroundColor={theme.colors.background} barStyle="dark-content" />
       <KeyboardAvoidingView style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.scroll}>
           <Animated.View style={[styles.card, { opacity: fadeAnim }]}>
+
             {/* Logo */}
             <View style={styles.logoBox}>
               <Image
@@ -117,7 +158,7 @@ export default function PerfilScreen({ route }) {
 
             <Text style={styles.title}>Meu Perfil</Text>
 
-            {/* Campos editáveis */}
+            {/* Nome */}
             <View style={styles.inputBox}>
               <Text style={styles.label}>Nome:</Text>
               <TextInput
@@ -125,22 +166,37 @@ export default function PerfilScreen({ route }) {
                 value={nome}
                 onChangeText={setNome}
                 placeholder="Digite seu nome"
-                placeholderTextColor="#9bbff7"
+                placeholderTextColor={theme.colors.placeholder}
               />
             </View>
 
+            {/* CPF */}
             <View style={styles.inputBox}>
               <Text style={styles.label}>CPF:</Text>
               <TextInput
                 style={styles.input}
                 value={cpf}
-                onChangeText={setCpf}
+                onChangeText={(text) => setCpf(formatarCPF(text))}
                 placeholder="Digite seu CPF"
-                placeholderTextColor="#9bbff7"
+                placeholderTextColor={theme.colors.placeholder}
                 keyboardType="numeric"
               />
             </View>
 
+            {/* Telefone */}
+            <View style={styles.inputBox}>
+              <Text style={styles.label}>Telefone:</Text>
+              <TextInput
+                style={styles.input}
+                value={telefone}
+                onChangeText={(text) => setTelefone(formatarTelefone(text))}
+                placeholder="(00) 00000-0000"
+                placeholderTextColor={theme.colors.placeholder}
+                keyboardType="phone-pad"
+              />
+            </View>
+
+            {/* Senha */}
             <View style={styles.inputBox}>
               <Text style={styles.label}>Senha:</Text>
               <TextInput
@@ -148,45 +204,66 @@ export default function PerfilScreen({ route }) {
                 value={senha}
                 onChangeText={setSenha}
                 placeholder="Digite sua senha"
-                placeholderTextColor="#9bbff7"
+                placeholderTextColor={theme.colors.placeholder}
                 secureTextEntry
               />
             </View>
 
-            {/* Botões */}
+            {/* Botão atualizar */}
             <TouchableOpacity style={styles.updateButton} onPress={atualizarConta}>
-              <LinearGradient colors={['#41d6ff', '#2060ae']} style={styles.buttonGradient}>
+              <LinearGradient colors={[theme.colors.primaryDark, theme.colors.primary]} style={styles.buttonGradient}>
                 <Text style={styles.buttonText}>Atualizar Conta</Text>
               </LinearGradient>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.deleteButton} onPress={excluirConta}>
-              <LinearGradient colors={['#ff4444', '#aa0000']} style={styles.buttonGradient}>
+            {/* Botão excluir */}
+            <TouchableOpacity style={styles.deleteButton} onPress={confirmarExclusao}>
+              <LinearGradient colors={[theme.colors.deleteGradientStart, theme.colors.deleteGradientEnd]} style={styles.buttonGradient}>
                 <Text style={styles.buttonText}>Excluir Conta</Text>
               </LinearGradient>
             </TouchableOpacity>
 
+            {/* Voltar */}
             <TouchableOpacity
               style={styles.backBtn}
               onPress={() => navigation.navigate('Home', { usuario })}
             >
-              <Ionicons name="arrow-back" size={20} color="#2060ae" style={{ marginRight: 6 }} />
+              <Ionicons name="arrow-back" size={20} color={theme.colors.backBtn} style={{ marginRight: 6 }} />
               <Text style={styles.backBtnText}>Voltar</Text>
             </TouchableOpacity>
           </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </LinearGradient>
+
+      {/* Modal de confirmação de exclusão */}
+      <Modal visible={modalVisible} transparent animationType="fade">
+        <View style={styles.modalContainer}>
+          <View style={styles.modalBox}>
+            <Text style={styles.modalTitle}>Confirme sua senha</Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Digite sua senha"
+              placeholderTextColor={theme.colors.placeholder}
+              secureTextEntry
+              value={confirmSenha}
+              onChangeText={setConfirmSenha}
+            />
+            <View style={styles.modalBtns}>
+              <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.cancelBtn}>
+                <Text style={styles.cancelText}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={excluirConta} style={styles.confirmBtn}>
+                <Text style={styles.confirmText}>Confirmar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  bg: {
-    flex: 1,
-    backgroundColor: "#0f2027",
-    justifyContent: "center",
-    alignItems: "center",
-  },
   scroll: {
     padding: 20,
     paddingBottom: 40,
@@ -195,21 +272,22 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#0f2027",
   },
   card: {
     width: width * 0.92,
     maxWidth: 400,
-    backgroundColor: "#fff",
-    borderRadius: 26,
+    backgroundColor: theme.colors.card,
+    borderRadius: theme.radius.lg,
     paddingVertical: 38,
     paddingHorizontal: 28,
     alignItems: "stretch",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.12,
-    shadowRadius: 14,
-    elevation: 14,
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 8,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
   },
   logoBox: {
     alignItems: "center",
@@ -218,16 +296,13 @@ const styles = StyleSheet.create({
   logoImage: {
     width: 110,
     height: 110,
-    borderRadius: 20,
-    backgroundColor: "#fff",
   },
   title: {
     fontFamily: "Montserrat_700Bold",
-    fontSize: 28,
-    color: "#2060ae",
+    fontSize: 26,
+    color: theme.colors.primaryDark,
     textAlign: "center",
     marginBottom: 24,
-    letterSpacing: 0.8,
   },
   inputBox: {
     marginBottom: 16,
@@ -235,34 +310,34 @@ const styles = StyleSheet.create({
   label: {
     fontFamily: "Montserrat_600SemiBold",
     fontSize: 16,
-    color: "#2060ae",
+    color: theme.colors.primaryDark,
     marginBottom: 6,
   },
   input: {
     fontFamily: "Montserrat_400Regular",
     fontSize: 16,
-    color: "#293857",
+    color: theme.colors.text,
     borderWidth: 1,
-    borderColor: "#d9e3fa",
-    borderRadius: 12,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radius.sm,
     paddingVertical: 10,
     paddingHorizontal: 12,
-    backgroundColor: "#e7f1fd",
+    backgroundColor: theme.colors.card,
   },
   updateButton: {
     marginTop: 20,
-    borderRadius: 14,
+    borderRadius: theme.radius.md,
     overflow: "hidden",
   },
   deleteButton: {
     marginTop: 12,
-    borderRadius: 14,
+    borderRadius: theme.radius.md,
     overflow: "hidden",
   },
   buttonGradient: {
     paddingVertical: 16,
     alignItems: "center",
-    borderRadius: 14,
+    borderRadius: theme.radius.md,
   },
   buttonText: {
     fontFamily: "Montserrat_600SemiBold",
@@ -276,12 +351,71 @@ const styles = StyleSheet.create({
     marginTop: 20,
     paddingVertical: 10,
     paddingHorizontal: 18,
-    borderRadius: 14,
-    backgroundColor: "#e7f1fd",
+    borderRadius: theme.radius.md,
+    backgroundColor: theme.colors.card,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
   },
   backBtnText: {
     fontFamily: "Montserrat_600SemiBold",
-    color: "#2060ae",
+    color: theme.colors.backBtn,
     fontSize: 16,
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalBox: {
+    width: '85%',
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 20,
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontFamily: 'Montserrat_700Bold',
+    fontSize: 18,
+    color: theme.colors.primaryDark,
+    marginBottom: 14,
+  },
+  modalInput: {
+    width: '100%',
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    marginBottom: 20,
+  },
+  modalBtns: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  cancelBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: theme.colors.primary,
+    alignItems: 'center',
+    marginRight: 10,
+  },
+  confirmBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 10,
+    backgroundColor: theme.colors.primary,
+    alignItems: 'center',
+  },
+  cancelText: {
+    color: theme.colors.primary,
+    fontFamily: 'Montserrat_600SemiBold',
+  },
+  confirmText: {
+    color: '#fff',
+    fontFamily: 'Montserrat_600SemiBold',
   },
 });
